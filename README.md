@@ -1,0 +1,2 @@
+# supercollager
+Photomosaic generator
