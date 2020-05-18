@@ -10,9 +10,13 @@ parser = argparse.ArgumentParser(description='Specify whether to regenerate comp
 
 parser.add_argument('--refresh_components', action='store_true')
 
+default_components_path = os.path.join('images', 'components')
+
+parser.add_argument('--components_folder', default=default_components_path)
+
 args = parser.parse_args()
 
-components_path = os.path.join('images', 'components')
+components_path = args.components_folder
 
 # Right now, the shape of components is square
 # Changing this will require a different approach to cropping
@@ -79,7 +83,6 @@ def main():
 
         height_stride_on_target = int(components_height / RESOLUTION_MULTIPLIER)
         width_stride_on_target = int(components_width / RESOLUTION_MULTIPLIER)
-
 
         target_tile_color = np.mean(
           target_img[i*height_stride_on_target:int((i+1)*height_stride_on_target),

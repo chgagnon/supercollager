@@ -20,7 +20,6 @@ def get_components(components_path, components_height, components_width, refresh
   
   save_resized_path = os.path.join(components_path, 'resized')
 
-
   if refresh_components:
     rmtree(save_resized_path)
 

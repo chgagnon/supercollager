@@ -16,6 +16,8 @@ images/ should contain:
 
 Run __makemosaic.py --refresh_components__ to regenerate the tiling components
 
+Run __makemosaic.py --components_folder__ [folder name] to specify a particular folder of images to use as tile components (the default folder is called components, which is the folder used when the flag is not included)
+
 ## Tunable Parameters in makemosaic.py
 
 RESOLUTION_MULTIPLIER is the ratio of input target image pixels to output mosaic image pixels, and should be set to some integer.
