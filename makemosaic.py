@@ -18,15 +18,18 @@ args = parser.parse_args()
 
 components_path = args.components_folder
 
+COMPONENT_SIZE = 40
+
 # Right now, the shape of components is square
 # Changing this will require a different approach to cropping
-components_width = 20
-components_height = 20
+components_width = COMPONENT_SIZE
+components_height = COMPONENT_SIZE
 
 targets_path = os.path.join('images', 'targets')
 output_path = os.path.join('images', 'mosaics')
 
-RESOLUTION_MULTIPLIER = 4
+RESOLUTION_MULTIPLIER = 2
+
 
 '''
 Determine which component image has nearest average color to current target
