@@ -28,7 +28,7 @@ components_height = COMPONENT_SIZE
 targets_path = os.path.join('images', 'targets')
 output_path = os.path.join('images', 'mosaics')
 
-RESOLUTION_MULTIPLIER = 2
+TILING_FACTOR = 4
 
 
 '''
@@ -70,8 +70,8 @@ def main():
     # Excess portions of the target, in the bottom-right, will be clipped off
     # The generated image will have 4x the resolution of the original target
         # (e.g. replacing 50-pix squares with 100-pix squares)
-    height_in_tiles = np.floor(RESOLUTION_MULTIPLIER * target_img.shape[0] / components_height).astype(int)
-    width_in_tiles = np.floor(RESOLUTION_MULTIPLIER * target_img.shape[1] / components_width).astype(int)
+    height_in_tiles = np.floor(TILING_FACTOR * target_img.shape[0] / components_height).astype(int)
+    width_in_tiles = np.floor(TILING_FACTOR * target_img.shape[1] / components_width).astype(int)
 
     # print(height_in_tiles)
     # print(width_in_tiles)
@@ -84,8 +84,8 @@ def main():
         # tile in the target
         # print("Now preparing tile at (" + str(i) + ", " + str(j) + ")" )
 
-        height_stride_on_target = int(components_height / RESOLUTION_MULTIPLIER)
-        width_stride_on_target = int(components_width / RESOLUTION_MULTIPLIER)
+        height_stride_on_target = int(components_height / TILING_FACTOR)
+        width_stride_on_target = int(components_width / TILING_FACTOR)
 
         target_tile_color = np.mean(
           target_img[i*height_stride_on_target:int((i+1)*height_stride_on_target),
