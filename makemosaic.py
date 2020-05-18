@@ -58,7 +58,7 @@ def main():
 
     target_img = io.imread(target_filename)
 
-    print('Target has shape:', target_img.shape)
+    print('Target image has shape:', target_img.shape)
 
     # Excess portions of the target, in the bottom-right, will be clipped off
     # The generated image will have 4x the resolution of the original target
@@ -66,8 +66,8 @@ def main():
     height_in_tiles = np.floor(RESOLUTION_MULTIPLIER * target_img.shape[0] / components_height).astype(int)
     width_in_tiles = np.floor(RESOLUTION_MULTIPLIER * target_img.shape[1] / components_width).astype(int)
 
-    print(height_in_tiles)
-    print(width_in_tiles)
+    # print(height_in_tiles)
+    # print(width_in_tiles)
 
     mosaic = np.empty((height_in_tiles*components_height, width_in_tiles*components_width, 3))
 
@@ -89,15 +89,16 @@ def main():
 
         mosaic[i*components_height:(i+1)*components_height,
               j*components_width:(j+1)*components_width] = components[comp_index]
-        print("added tile of shape", components[comp_index].shape)
+        # print("added tile of shape", components[comp_index].shape)
 
     mosaic = mosaic.astype(np.uint8)
 
-    print(mosaic)
+    # print(mosaic)
 
     io.imsave(os.path.join(output_path, os.path.basename(target_filename) + '_mosaic.png'), mosaic)
-    io.imshow(mosaic)
-    plt.show()
+    # plt.figure()
+    # io.imshow(mosaic)
+    # plt.show()
 
 if __name__ == '__main__':
   main()

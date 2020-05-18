@@ -33,8 +33,9 @@ def get_components(components_path, components_height, components_width, refresh
     components = [] 
 
     for img_num, filename in enumerate(list_component_images):
+      print('Filename is', filename)
       img = io.imread(filename)
-      print('Input is', img.shape, filename)
+      print('Input has shape', img.shape)
 
       # square off the images and resize to proper width and height
 
@@ -49,16 +50,15 @@ def get_components(components_path, components_height, components_width, refresh
       else:
         right_crop = left_crop
 
-      print(right_crop)
+      print("Right crop is", right_crop)
 
-      cropped_img = None
+      cropped_img = img
 
-      if input_height > input_width:
-        cropped_img = img[left_crop : -right_crop, :, :]
-      else:
-        cropped_img = img[:, left_crop:-right_crop, :]
-
-      assert(cropped_img is not None)
+      if right_crop != 0:
+        if input_height > input_width:
+          cropped_img = img[left_crop : -right_crop, :, :]
+        else:
+          cropped_img = img[:, left_crop:-right_crop, :]
 
       print('Cropped to', cropped_img.shape)
 
@@ -66,12 +66,20 @@ def get_components(components_path, components_height, components_width, refresh
       
       final_img = img_as_ubyte(final_img)
 
+      print("Final image shape is", final_img.shape)
+      
+      if final_img.shape[2] == 4:
+        # Rip out 4th channel (usually this is just the transparency in a .png)
+        final_img = final_img[:,:,:3]
+
       components.append(final_img)
-      # io.imshow(final_img)
 
       io.imsave(os.path.join(save_resized_path, str(img_num) + '.png'), final_img)
-      plt.show()
 
+      # io.imshow(final_img)  
+      # plt.show()
+
+    components = np.stack(components, axis=0)
     return components, get_average_colors(components)
 
   else: 
@@ -81,7 +89,6 @@ def get_components(components_path, components_height, components_width, refresh
 
     for filename in list_component_images:
       image = io.imread(filename)
-      print(image.shape)
       components.append(image)
     components = np.array(components)
 
