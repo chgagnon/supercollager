@@ -3,7 +3,7 @@ Photomosaic generator
 
 ## How to Run the Program
 
-Run __makemosaic.py__ to generate a mosaic images in the project's root directory
+Run __makemosaic.py__ to generate mosaic images in the project's root directory
 
 In the project's root directory, there should be a directory called images/
 
