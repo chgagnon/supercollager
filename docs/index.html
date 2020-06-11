@@ -1,12 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <link rel="stylesheet" href="styles.css">
-</head>
 
-<body>
-  
-<h1>SuperCollager</h1>
-</body>
+  <head>
+    <link rel="stylesheet" href="styles.css">
+    <script src="imageimport.js"></script>
+  </head>
+
+  <body>
+
+    <h1>SuperCollager</h1>
+    <div class='spanContainer'>
+      <!-- span included so that box is fit to text, and containing div allows
+        for centering span on the page -->
+      <span class='tileButton'>
+        <button style='cursor: pointer;' type="button">
+          click here to upload images to make into mosaic tiles <p>(hold ctrl on Windows or cmd on Mac to select more than one file)</p>
+        </button>
+      </span>
+    </div>
+    <input type="file" multiple accept="image/*" name="tiles" id="tileInput" style="display: none;">
+
+
+    <br>
+    <button style="cursor: pointer;" onclick='cool()'>click here to upload an image to make into a mosaic</button>
+    <br>
+
+
+  </body>
 
 </html>
