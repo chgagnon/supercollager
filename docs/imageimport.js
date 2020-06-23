@@ -9,11 +9,11 @@ const TILING_FACTOR = 4;
 const size = 300;
 
 // Draws in Tiles if no such HTML element alreay exists in the document
-
 function writeTilesTitle() {
 
   let checkTilesTitle = document.getElementById('tilesTitle');
 
+  // undefined is a falsy value in JS
   if (!checkTilesTitle) {
     let tilesTitle = document.createElement('h4')
     tilesTitle.setAttribute('id', 'tilesTitle')
@@ -26,6 +26,7 @@ function writeTilesTitle() {
   
 }
 
+// Controls tile thumbnail display size (but not actual image size in pixels)
 function setCanvasSizeToImg(canvas, img) {
 
   // var $canvas = document.getElementById('canvas');
@@ -36,6 +37,8 @@ function setCanvasSizeToImg(canvas, img) {
   canvas.height = 120
 
 }
+
+
 // @param: img - Ndarray (from NumJS) for a mosaic tile
 // @return: (1, 3) array - an RGB color vector for the input image
 function get_average_color(img) {
@@ -94,11 +97,26 @@ function cropTile(img) {
                
 }
 
+function clearCanvasHolder() {
+  const canvasHolder = document.getElementById('canvasHolder')
+  while (canvasHolder.firstChild) {
+    canvasHolder.removeChild(canvasHolder.lastChild);
+  }
+}
+
 function uploadTiles() {
   // alert('hey!');
 
+  // every time the input button is clicked, previously uploaded files are not
+  // accessible --> remove those thumbnails from the DOM so that their absence
+  // is clearly communicated
+  clearCanvasHolder()
+
   const fileList = this.files;
   const numFiles = fileList.length;
+
+  console.log('num files is now ' + numFiles.toString())
+
 
   // array of images to use as tiles - additional tiles appended along 1st dim
   let tiles = nj.zeros([numFiles,COMPONENT_SIZE,COMPONENT_SIZE,3])
