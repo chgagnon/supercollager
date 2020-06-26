@@ -57,7 +57,7 @@ body {
   
 }
 
-.tileButton :active {
+.tileButton :active, .tileButton .active {
   background-color: black;
   color: white;
 }
@@ -71,15 +71,19 @@ body {
   margin-top: 800px;
 }
 
+.bottomSpace {
+  margin-bottom: 40px;
+}
+
 .tileImage {
   margin: 4px;
   box-shadow: 5px 5px 8px gray;
 }
 
-#canvasHolder {
+#tileCanvasHolder {
   text-align: left;
 }
 
-#mosaicCanvasHolder {
+.mosaicCanvasHolder {
   text-align: center;
 }

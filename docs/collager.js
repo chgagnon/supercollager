@@ -7,7 +7,7 @@ const TILING_FACTOR = 5;
 
 let numFiles = null;
 
-let tiles_dict = new Object();
+let tiles_dict = null;
 
 // size of largest image dimension
 const size = 300;
@@ -23,9 +23,8 @@ function writeTilesTitle() {
     tilesTitle.setAttribute('id', 'tilesTitle')
     let tilesText = document.createTextNode('Tiles:')
     tilesTitle.appendChild(tilesText)
-    let canvasHolder = document.getElementById('canvasHolder')
-    let tilesDisplay = document.getElementById('tilesDisplay')
-    tilesDisplay.insertBefore(tilesTitle, canvasHolder)
+    let canvasHolder = document.getElementById('tileCanvasHolder')
+    document.body.insertBefore(tilesTitle, canvasHolder)
   }
   
 }
@@ -46,13 +45,11 @@ function setCanvasSizeToImg(canvas, img) {
 // @return: 3-element array - an RGB color vector for the input image
 function get_average_color(img) {
   let R = nj.mean(img.slice(null, null,[0,1]));
-  console.log('R channel average is ' + R.toString());
+  // console.log('R channel average is ' + R.toString());
   let B = nj.mean(img.slice(null, null, [1,2]));
-  console.log('B channel average is ' + B.toString());
-
+  // console.log('B channel average is ' + B.toString());
   let G = nj.mean(img.slice(null, null, [2,3]));
-
-  console.log('G channel average is ' + G.toString());
+  // console.log('G channel average is ' + G.toString());
 
   return [R, B, G];
 }
@@ -77,7 +74,7 @@ function cropTile(img) {
     right_crop = left_crop;
   }
 
-  console.log("Right crop is " + right_crop.toString());
+  // console.log("Right crop is " + right_crop.toString());
 
   let cropped_tile = img;
 
@@ -89,7 +86,7 @@ function cropTile(img) {
     }
   }
 
-  console.log('Cropped to '+ cropped_tile.shape.toString());
+  // console.log('Cropped to '+ cropped_tile.shape.toString());
 
   cropped_tile = nj.images.resize(cropped_tile, COMPONENT_SIZE, COMPONENT_SIZE);
 
@@ -101,14 +98,6 @@ function cropTile(img) {
 
 function addUploadMosaicTargetButton() {
   
-  let checkTargetUploadButton = document.getElementById('targetUploadButton')
-
-  checkTargetUploadButton.setAttribute('style', 'display: none;')  
-  /* next line called to create delay so that animation triggers when fadeIn 
-   * class is added back to the button (https://css-tricks.com/restart-css-animation/)
-   */
-  void checkTargetUploadButton.offsetWidth;
-  checkTargetUploadButton.setAttribute('style', 'display: default;')  
 
   const targetInput = document.getElementById('targetInput');
   targetInput.addEventListener('change', makeMosaic);
@@ -118,10 +107,20 @@ function addUploadMosaicTargetButton() {
     targetInput.click()
   });
 
+  let checkTargetUploadButton = document.getElementById('targetUploadButton')
+
+  checkTargetUploadButton.setAttribute('style', 'display: none;')  
+  /* next line called to create delay so that animation triggers when fadeIn 
+   * class is added back to the button (https://css-tricks.com/restart-css-animation/)
+   */
+  void checkTargetUploadButton.offsetWidth;
+  checkTargetUploadButton.setAttribute('style', 'display: default;')  
+
+
 }
 
 function clearCanvasHolder() {
-  const canvasHolder = document.getElementById('canvasHolder')
+  const canvasHolder = document.getElementById('tileCanvasHolder')
   while (canvasHolder.firstChild) {
     canvasHolder.removeChild(canvasHolder.lastChild);
   }
@@ -143,7 +142,7 @@ function uploadTiles() {
   const fileList = this.files;
   numFiles = fileList.length;
 
-  console.log('num files is now ' + numFiles.toString())
+  // console.log('num files is now ' + numFiles.toString())
 
   // making tiles_dict proper size to handle all uploaded images, and ensuring
   // indexing fits number of files currently uploaded
@@ -160,20 +159,13 @@ function uploadTiles() {
 
     $img.src = URL.createObjectURL(fileList[img_num]);
     // $img.src = 'https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg'
-    // $img.setAttribute('width', '400 px');
-    console.log('whats up');
-    // document.body.appendChild($img);
 
-    // BEGIN CODE RELEVANT TO SUPERCOLLAGER TASK:
-
-    let canvas_holder = document.getElementById('canvasHolder');
+    let canvas_holder = document.getElementById('tileCanvasHolder');
 
     let cropped_canvas = document.createElement('CANVAS');
     
     cropped_canvas.setAttribute('class', 'tileImage');
     cropped_canvas.classList.add('fadeIn');
-
-    console.log($img);
 
     // this MUST be an anonymous function because otherwise NumJS runs into a
     // canvas error (https://github.com/pa7/heatmap.js/issues/284)
@@ -183,9 +175,6 @@ function uploadTiles() {
       canvas_holder.appendChild(cropped_canvas);
 
       URL.revokeObjectURL(this.src);
-
-      console.log($img.src);
-      console.log($img);
 
       let img = nj.images.read($img);
 
@@ -201,7 +190,7 @@ function uploadTiles() {
 
       // checking whether this is the last image to load
       if (img_num == (numFiles - 1)) {
-        alert('thumbnails loaded')
+        // alert('thumbnails loaded')
 
         // after displaying tile thumbnails --> display button to upload mosaic target
 
@@ -210,7 +199,7 @@ function uploadTiles() {
 
     };
 
-    console.log(img_num);
+    console.log('processed image number: ' + img_num.toString());
   }
 
 };
@@ -224,8 +213,6 @@ function uploadTiles() {
 function getNearestTile(targetSegment) {
 
   let target_seg_color = get_average_color(targetSegment)
-  console.log('new target color is ')
-  console.log(target_seg_color)
 
   // get distance between all 3-channel vectors in the tiles_dict
 
@@ -234,10 +221,7 @@ function getNearestTile(targetSegment) {
   let euclidean_distance = (accumulator, color_component, index) => accumulator + 
     Math.pow((color_component - target_seg_color[index]), 2);
 
-  console.log('tiles dict length is ' + tiles_dict.length.toString())
-
   for (var i = 0; i < tiles_dict.length; i++) {
-    // alert('ho ho ho')
     // initial value passed to reduce is 0
     distances[i] = tiles_dict[i]['tile_color'].reduce(euclidean_distance, 0)
   }
@@ -246,10 +230,10 @@ function getNearestTile(targetSegment) {
     // determine which tile has minimum distance, then return it
 
   let get_argmin = (acc, curr_dist, index, array) => (curr_dist < array[acc]) ? index : acc;
-  console.log('distances are ')
-  console.log(Object.values(distances))
+  // console.log('distances are ')
+  // console.log(Object.values(distances))
   let index_of_nearest_tile = Object.values(distances).reduce(get_argmin, 0)
-  console.log('index of nearest tile is ' + index_of_nearest_tile.toString())
+  // console.log('index of nearest tile is ' + index_of_nearest_tile.toString())
 
   return tiles_dict[index_of_nearest_tile]['tile_img'];
 
@@ -258,7 +242,6 @@ function getNearestTile(targetSegment) {
 function makeMosaic() {
 
   const targetUpload = this.files[0];
-  console.log(targetUpload)
 
   let target_img = new Image()
   target_img.src = URL.createObjectURL(targetUpload)
@@ -269,19 +252,14 @@ function makeMosaic() {
 
     let height_in_tiles = Math.floor(TILING_FACTOR * target_arr.shape[0] / COMPONENT_SIZE)
 
-    // alert('height in tiles is ' + height_in_tiles.toString())
-
     let width_in_tiles = Math.floor(TILING_FACTOR * target_arr.shape[1] / COMPONENT_SIZE)
 
-    alert('output should have tile height ' + height_in_tiles.toString() + ' and tile width ' + width_in_tiles.toString())
+    // alert('output should have tile height ' + height_in_tiles.toString() + ' and tile width ' + width_in_tiles.toString())
 
     let stride_on_target = Math.round(COMPONENT_SIZE / TILING_FACTOR)
 
     // since updating NumJS arrays has to be done on individual pixels,
     // use stacking instead
-
-
-    alert('now making mosaic...');
 
     let mosaic = new Array();
 
@@ -293,12 +271,11 @@ function makeMosaic() {
             [j*stride_on_target, (j+1)*stride_on_target],
             null)
 
-        // alert('boom boom')
         let nearest_tile = getNearestTile(target_segment)
 
         // checking whether an entry exists for mosaic[i]
         if ((mosaic.length - 1) < i) {
-          // alert('ok this is good')
+
           mosaic.push(nearest_tile);
         } else {
           // console.log('mosaic shape is ' + mosaic[i].shape.toString())
@@ -322,21 +299,86 @@ function makeMosaic() {
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
     final_mosaic = mosaic.reduce(knit_rows)
 
-    let canvas_holder = document.getElementById('mosaicCanvasHolder');
+    let mosaic_canvas_holder = document.createElement('DIV');
+    mosaic_canvas_holder.classList.add('mosaicCanvasHolder')
 
     let mosaic_canvas = document.createElement('CANVAS');
     
-    mosaic_canvas.setAttribute('class', 'tileImage');
-    mosaic_canvas.classList.add('fadeIn');
+    mosaic_canvas.classList.add('fadeIn', 'tileImage');
 
     setCanvasSizeToImg(mosaic_canvas, final_mosaic);
 
     nj.images.save(final_mosaic, mosaic_canvas)
 
-    canvas_holder.appendChild(mosaic_canvas);
+    mosaic_canvas_holder.appendChild(mosaic_canvas);
+
+    document.body.appendChild(mosaic_canvas_holder)
+
+    showDownloadLink(mosaic_canvas);
+
+    encourageAnotherMosaic();
 
   }
 
+  
+}
+
+function showDownloadLink(canvas) {
+  let link = document.createElement('A');
+  link.setAttribute('download', 'mosaic.png')
+  link.setAttribute('href', canvas.toDataURL("image/png").replace("image/png", "image/octet-stream"));
+  
+  document.body.appendChild(link)
+
+  let mosaicDownloadButton = document.createElement('DIV')
+  mosaicDownloadButton.classList.add('centeringDiv', 'slowFade', 'bottomSpace')
+
+  let downloadSpan = document.createElement('SPAN')
+  downloadSpan.classList.add('tileButton')
+
+  let buttonButton = document.createElement('BUTTON')
+  buttonButton.setAttribute('style', 'cursor: pointer;')
+  buttonButton.setAttribute('type', 'button')
+
+  let buttonText = document.createTextNode('click here to download the mosaic above')
+
+  downloadSpan.addEventListener('click', function () {
+    link.click()
+  });
+
+  buttonButton.appendChild(buttonText)
+  downloadSpan.appendChild(buttonButton)
+  mosaicDownloadButton.appendChild(downloadSpan)
+
+  document.body.appendChild(mosaicDownloadButton)
+
+}
+
+// changes text in button to upload mosaic target image
+function encourageAnotherMosaic() {
+  let button = document.getElementById('targetButtonButton')
+  button.textContent = 'click here to upload another image to make into a mosaic'
+  
+  // this is time in milliseconds
+  let blink_duration = 300
+
+  // blink the button 3 times
+  button.classList.add('active')
+  setTimeout(function () {
+    button.classList.remove('active');
+    setTimeout(function() {
+      button.classList.add('active');
+      setTimeout(function() {
+        button.classList.remove('active');
+        setTimeout(function() {
+          button.classList.add('active');
+          setTimeout(function() {
+            button.classList.remove('active')
+          }, blink_duration)
+        }, blink_duration)
+      }, blink_duration)
+    }, blink_duration)
+  }, blink_duration)
   
 }
 
