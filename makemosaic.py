@@ -78,14 +78,14 @@ def main():
 
     mosaic = np.empty((height_in_tiles*components_height, width_in_tiles*components_width, 3))
 
+    height_stride_on_target = int(components_height / TILING_FACTOR)
+    width_stride_on_target = int(components_width / TILING_FACTOR)
+
     for i in range(height_in_tiles):
       for j in range(width_in_tiles):
         # target_tile_color is (3,) array - average R, G, B of corresponding
         # tile in the target
         # print("Now preparing tile at (" + str(i) + ", " + str(j) + ")" )
-
-        height_stride_on_target = int(components_height / TILING_FACTOR)
-        width_stride_on_target = int(components_width / TILING_FACTOR)
 
         target_tile_color = np.mean(
           target_img[i*height_stride_on_target:int((i+1)*height_stride_on_target),

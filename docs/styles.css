@@ -12,12 +12,23 @@ h4 {
   animation-duration: 2s;
 }
 
-.fadeIn {
-  animation-name: fade;
-  animation-duration: 1s;
+.slowFade {
+  animation: fadein 5s;
 }
 
-@keyframes fade {
+.fadeIn {
+  -webkit-animation: fadein 1s;
+          animation: fadein 1s;
+}
+
+
+@-webkit-keyframes fadein {
+  0% {opacity: 0%;}
+  100% {opacity: 100%;}
+}
+
+
+@keyframes fadein {
   from {opacity: 0%;}
   to {opacity: 100%;}
 }
@@ -41,6 +52,7 @@ body {
   font-family: Comic Sans MS;
   font-size: large;
   margin-top: 15px;
+  background-color: white;
 
   
 }
@@ -51,8 +63,12 @@ body {
 }
 
 
-.spanContainer {
+.centeringDiv {
   text-align: center;
+}
+
+.elbowRoom {
+  margin-top: 800px;
 }
 
 .tileImage {
@@ -62,4 +78,8 @@ body {
 
 #canvasHolder {
   text-align: left;
+}
+
+#mosaicCanvasHolder {
+  text-align: center;
 }
