@@ -90,7 +90,7 @@ function cropTile(img) {
 
   cropped_tile = nj.images.resize(cropped_tile, COMPONENT_SIZE, COMPONENT_SIZE);
 
-  console.log("Final image shape is " + cropped_tile.shape.toString());
+  console.log("Final cropped shape is " + cropped_tile.shape.toString());
 
   return cropped_tile;
                
@@ -239,12 +239,63 @@ function getNearestTile(targetSegment) {
 
 }
 
+function addLoadingBar() {
+
+  let centeringDiv = document.createElement('DIV')
+  centeringDiv.classList.add('centeringDiv')
+
+  let container = document.createElement('DIV')
+  centeringDiv.appendChild(container)
+
+  let bar = new ldBar(container, {'value': 0})
+
+  document.body.appendChild(centeringDiv)
+
+  return bar
+}
+
+function displayMosaic(mosaic) {
+  const knit_rows = (growing_mosaic, next_row) => {
+        // console.log('growing shape is ' + growing_mosaic.shape.toString())
+        // console.log('next row shape is ' + next_row.shape.toString())
+
+  // this concatenation is along axis 0 (height)
+  return nj.concatenate(growing_mosaic.transpose(2,1,0), next_row.transpose(2,1,0)).transpose(2,1,0);
+  }
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
+  final_mosaic = mosaic.reduce(knit_rows)
+
+  let mosaic_canvas_holder = document.createElement('DIV');
+  mosaic_canvas_holder.classList.add('mosaicCanvasHolder')
+
+  let mosaic_canvas = document.createElement('CANVAS');
+  
+  mosaic_canvas.classList.add('fadeIn', 'tileImage');
+
+  setCanvasSizeToImg(mosaic_canvas, final_mosaic);
+
+  nj.images.save(final_mosaic, mosaic_canvas)
+
+  mosaic_canvas_holder.appendChild(mosaic_canvas);
+
+  document.body.appendChild(mosaic_canvas_holder)
+
+  showDownloadLink(mosaic_canvas);
+
+  encourageAnotherMosaic();
+}
+
+
+
 function makeMosaic() {
 
   const targetUpload = this.files[0];
 
   let target_img = new Image()
   target_img.src = URL.createObjectURL(targetUpload)
+
+  let loadingBar = addLoadingBar();
 
   target_img.onload = function() {
     
@@ -253,6 +304,9 @@ function makeMosaic() {
     let height_in_tiles = Math.floor(TILING_FACTOR * target_arr.shape[0] / COMPONENT_SIZE)
 
     let width_in_tiles = Math.floor(TILING_FACTOR * target_arr.shape[1] / COMPONENT_SIZE)
+
+    let total_tiles_to_draw = height_in_tiles * width_in_tiles
+    console.log('will need to draw ' + total_tiles_to_draw.toString() + ' tiles')
 
     // alert('output should have tile height ' + height_in_tiles.toString() + ' and tile width ' + width_in_tiles.toString())
 
@@ -263,60 +317,60 @@ function makeMosaic() {
 
     let mosaic = new Array();
 
-    for (var i = 0; i < height_in_tiles; i++) {
-      for (var j = 0; j < width_in_tiles; j++) {
-        
-        let target_segment = target_arr.slice(
-            [i*stride_on_target, (i+1)*stride_on_target],
-            [j*stride_on_target, (j+1)*stride_on_target],
-            null)
+    let tiles_drawn = 0;
 
-        let nearest_tile = getNearestTile(target_segment)
+    let loadingCheckpoints = 0;
 
-        // checking whether an entry exists for mosaic[i]
-        if ((mosaic.length - 1) < i) {
+    let i = 0;  
+    let j = 0;
 
-          mosaic.push(nearest_tile);
+    // (function buildMosaic(){}); emulates a pair of nested for-loops (i incremented in outer loop)
+    //    --> written this way to allow for visible DOM updates to the progress bar
+    (function buildMosaic() {
+
+      let target_segment = target_arr.slice(
+        [i*stride_on_target, (i+1)*stride_on_target],
+        [j*stride_on_target, (j+1)*stride_on_target],
+        null)
+
+      let nearest_tile = getNearestTile(target_segment)
+      tiles_drawn = tiles_drawn + 1;
+      let percent_loaded = Math.floor(tiles_drawn / total_tiles_to_draw * 100)
+
+      // update progress bar
+      if ((percent_loaded % 3 == 0) && percent_loaded > loadingCheckpoints) {
+        console.log(loadingCheckpoints)
+        loadingCheckpoints = percent_loaded;
+        // alert(percent_loaded.toString() + "% loaded")
+
+        console.log('setting to ' + percent_loaded.toString())
+        loadingBar.set(percent_loaded, false)
+      }
+
+      if ((mosaic.length - 1) < i) {
+
+        mosaic.push(nearest_tile);
+      } else {
+        // console.log('mosaic shape is ' + mosaic[i].shape.toString())
+        // console.log('nearest tile shape is ' + nearest_tile.shape.toString())
+        // this concatenation is along axis 1 (width)
+        mosaic[i] = nj.concatenate(mosaic[i].transpose(0,2,1), nearest_tile.transpose(0,2,1)).transpose(0,2,1)
+      }
+
+      j++;
+      if (j < width_in_tiles) {
+        setTimeout(buildMosaic, 0);
+      } else {
+        i++;
+        if (i < height_in_tiles) {
+          j = 0;
+          setTimeout(buildMosaic, 0)
         } else {
-          // console.log('mosaic shape is ' + mosaic[i].shape.toString())
-          // console.log('nearest tile shape is ' + nearest_tile.shape.toString())
-          // this concatenation is along axis 1 (width)
-          mosaic[i] = nj.concatenate(mosaic[i].transpose(0,2,1), nearest_tile.transpose(0,2,1)).transpose(0,2,1)
+          displayMosaic(mosaic)
         }
 
       }
-
-    }
-
-    const knit_rows = (growing_mosaic, next_row) => {
-      // console.log('growing shape is ' + growing_mosaic.shape.toString())
-      // console.log('next row shape is ' + next_row.shape.toString())
-
-      // this concatenation is along axis 0 (height)
-      return nj.concatenate(growing_mosaic.transpose(2,1,0), next_row.transpose(2,1,0)).transpose(2,1,0);
-    }
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
-    final_mosaic = mosaic.reduce(knit_rows)
-
-    let mosaic_canvas_holder = document.createElement('DIV');
-    mosaic_canvas_holder.classList.add('mosaicCanvasHolder')
-
-    let mosaic_canvas = document.createElement('CANVAS');
-    
-    mosaic_canvas.classList.add('fadeIn', 'tileImage');
-
-    setCanvasSizeToImg(mosaic_canvas, final_mosaic);
-
-    nj.images.save(final_mosaic, mosaic_canvas)
-
-    mosaic_canvas_holder.appendChild(mosaic_canvas);
-
-    document.body.appendChild(mosaic_canvas_holder)
-
-    showDownloadLink(mosaic_canvas);
-
-    encourageAnotherMosaic();
+    })();
 
   }
 
