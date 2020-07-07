@@ -2,6 +2,24 @@ h1 {
   text-align: center;
   font-weight: bold;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  margin-bottom: 10px;
+}
+
+h2 {
+  text-align: center;
+  font-weight: bold;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-size: small;
+  margin-top: 0;
+}
+
+.homepageLink {
+  color: black;
+
+}
+
+.homepageLink:hover {
+  color: darkBlue;
 }
 
 h4 {
@@ -86,6 +104,11 @@ body {
 
 .mosaicCanvasHolder {
   text-align: center;
+}
+
+.ldBar svg {
+  overflow: visible;
+  margin-top: 5px;
 }
 
 .ldBar-label {

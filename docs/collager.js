@@ -250,7 +250,7 @@ function addLoadingBar() {
 
   // setting LoadingBar.js attributes (must be done before calling new ldBar)
   container.classList.add('centeringDiv')
-  container.setAttribute('style', 'display: inline-block;')
+  container.setAttribute('style', 'display: inline-block; width: 500px; height: 20px;')
   
 
   let bar = new ldBar(container, 

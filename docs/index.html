@@ -2,6 +2,9 @@
 <html lang="en">
 
   <head>
+
+    <title>SuperCollager - on the web!</title>
+
     <!-- loadingbar.js -->
     <link rel="stylesheet" type="text/css" href="loading-bar.min.css"/>
     <script type="text/javascript" src="loading-bar.min.js"></script>
@@ -18,12 +21,13 @@
   <body>
 
     <h1>SuperCollager</h1>
+    <h2><a class='homepageLink' href='https://chgagnon.github.io'>back to Charlie's site</a></h2>
     <!-- span included so that box is fit to text, and containing div allows
         for centering span on the page -->
     <div class='centeringDiv'>
       <span class='tileButton'>
         <button style='cursor: pointer;' type="button">
-          click here to upload images to make into mosaic tiles <p>(hold ctrl on Windows or cmd on Mac to select more than one file)</p></button>
+          click here to upload images to generate square tiles<p>(hold ctrl on Windows or cmd on Mac to select more than one file)</p></button>
       </span>
     </div>
     <!-- input for tile images -->
@@ -44,7 +48,7 @@
     <div class='centeringDiv slowFade' style='display: none;' id='targetUploadButton'>
       <span class='tileButton' id='targetSpan'>
         <button style='cursor: pointer;' type="button" id='targetButtonButton'>
-          click here to upload an image to make into a mosaic<p></p>
+          click here to upload an image that will be made into a mosaic from the tiles above<p></p>
         </button>
       </span>
     </div>
