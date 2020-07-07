@@ -9,9 +9,6 @@ let numFiles = null;
 
 let tiles_dict = null;
 
-// size of largest image dimension
-const size = 300;
-
 // Draws in Tiles if no such HTML element alreay exists in the document
 function writeTilesTitle() {
 
@@ -244,10 +241,24 @@ function addLoadingBar() {
   let centeringDiv = document.createElement('DIV')
   centeringDiv.classList.add('centeringDiv')
 
+  // Setting id so that bar can be removed later (rather than passing 
+  // the HTML object through the necessary functions)
+  centeringDiv.setAttribute('id', 'bar')
+
   let container = document.createElement('DIV')
   centeringDiv.appendChild(container)
 
-  let bar = new ldBar(container, {'value': 0})
+  // setting LoadingBar.js attributes (must be done before calling new ldBar)
+  container.classList.add('centeringDiv')
+  container.setAttribute('style', 'display: inline-block;')
+  
+
+  let bar = new ldBar(container, 
+    {'value': 0,
+     'preset': 'line',
+     'precision': '0.1'
+    
+    })
 
   document.body.appendChild(centeringDiv)
 
@@ -279,6 +290,11 @@ function displayMosaic(mosaic) {
 
   mosaic_canvas_holder.appendChild(mosaic_canvas);
 
+  // get loading bar container to then remove it
+  let loadingBarContainer = document.getElementById('bar')
+  document.body.removeChild(loadingBarContainer)
+
+  // display final image
   document.body.appendChild(mosaic_canvas_holder)
 
   showDownloadLink(mosaic_canvas);
@@ -317,12 +333,10 @@ function makeMosaic() {
 
     let mosaic = new Array();
 
-    let tiles_drawn = 0;
-
-    let loadingCheckpoints = 0;
-
     let i = 0;  
     let j = 0;
+    let tiles_drawn = 0;
+    let progressTracker = 0;
 
     // (function buildMosaic(){}); emulates a pair of nested for-loops (i incremented in outer loop)
     //    --> written this way to allow for visible DOM updates to the progress bar
@@ -334,21 +348,17 @@ function makeMosaic() {
         null)
 
       let nearest_tile = getNearestTile(target_segment)
-      tiles_drawn = tiles_drawn + 1;
-      let percent_loaded = Math.floor(tiles_drawn / total_tiles_to_draw * 100)
+      tiles_drawn++;
+      let percent_loaded = tiles_drawn / total_tiles_to_draw * 100;
 
       // update progress bar
-      if ((percent_loaded % 3 == 0) && percent_loaded > loadingCheckpoints) {
-        console.log(loadingCheckpoints)
-        loadingCheckpoints = percent_loaded;
-        // alert(percent_loaded.toString() + "% loaded")
-
-        console.log('setting to ' + percent_loaded.toString())
+      if (percent_loaded > progressTracker) {
+        progressTracker = percent_loaded;
         loadingBar.set(percent_loaded, false)
       }
 
+      // constructing mosaic
       if ((mosaic.length - 1) < i) {
-
         mosaic.push(nearest_tile);
       } else {
         // console.log('mosaic shape is ' + mosaic[i].shape.toString())

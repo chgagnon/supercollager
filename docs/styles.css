@@ -87,3 +87,22 @@ body {
 .mosaicCanvasHolder {
   text-align: center;
 }
+
+.ldBar-label {
+  color: #383838;
+  font-family: 'varela round';
+  font-size: 1.5em;
+  font-weight: 400;
+}
+
+.ldBar path.mainline {
+  stroke-width: 10;
+  stroke: #606060;
+  stroke-linecap: round;
+}
+
+.ldBar path.baseline {
+    stroke-width: 14;
+    stroke: #f1f2f3;
+    stroke-linecap: round;
+}
