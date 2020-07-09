@@ -3,7 +3,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 let COMPONENT_SIZE = 40;
 
-let TILING_FACTOR = 5;
+let UPLOADED_TILE_SIZE = 40;
+
+let TILING_FACTOR = 2;
+
+// 8.5 million pixels 
+// (a round number above 4900 tiles with tile resolution 40x40px, which is known to work)
+let MAX_PIX_TO_DRAW = 8500000;
 
 let numFiles = null;
 
@@ -84,7 +90,7 @@ function cropTile(img) {
   }
 
   // console.log('Cropped to '+ cropped_tile.shape.toString());
-  cropped_tile = nj.images.resize(cropped_tile, COMPONENT_SIZE, COMPONENT_SIZE);
+  cropped_tile = nj.images.resize(cropped_tile, UPLOADED_TILE_SIZE, UPLOADED_TILE_SIZE);
 
   console.log("Final cropped shape is " + cropped_tile.shape.toString());
 
@@ -130,6 +136,9 @@ function clearCanvasHolder() {
 }
 
 function uploadTiles() {
+  
+  UPLOADED_TILE_SIZE = COMPONENT_SIZE
+
   // every time the input button is clicked, previously uploaded files are not
   // accessible --> remove those thumbnails from the DOM so that their absence
   // is clearly communicated
@@ -145,7 +154,7 @@ function uploadTiles() {
   tiles_dict = new Array(numFiles)
 
   // array of images to use as tiles - additional tiles appended along 1st dim
-  let tiles = nj.zeros([numFiles,COMPONENT_SIZE,COMPONENT_SIZE,3])
+  let tiles = nj.zeros([numFiles,UPLOADED_TILE_SIZE,UPLOADED_TILE_SIZE,3])
 
   writeTilesTitle();  
 
@@ -301,11 +310,38 @@ function displayMosaic(mosaic) {
   encourageAnotherMosaic();
 }
 
+function resizeTarget(numJSTarget, fileAPITarget) {
+  console.log('The original shape0/shape1 ratio is ')
+  console.log(numJSTarget.shape[0]/numJSTarget.shape[1]) 
 
+  console.log('The input target was ' + fileAPITarget.size.toString() + ' bytes')
+  let height_in_tiles = Math.floor(TILING_FACTOR * numJSTarget.shape[0] / UPLOADED_TILE_SIZE)
+  let width_in_tiles = Math.floor(TILING_FACTOR * numJSTarget.shape[1] / UPLOADED_TILE_SIZE)
+  let total_tiles_to_draw = height_in_tiles * width_in_tiles
+  console.log('Initial total tiles to draw is ' + total_tiles_to_draw.toString())
+  let total_pix = total_tiles_to_draw * UPLOADED_TILE_SIZE * UPLOADED_TILE_SIZE
+  console.log('Initial total pixels to draw is ' + total_pix.toString())
+
+  let max_tiles = MAX_PIX_TO_DRAW / (UPLOADED_TILE_SIZE * UPLOADED_TILE_SIZE)
+
+  let resize_ratio = 1;
+  let resized_target = numJSTarget
+  if (total_pix > MAX_PIX_TO_DRAW) {
+
+    resize_ratio = Math.sqrt(max_tiles / total_tiles_to_draw);
+    resized_target = nj.images.resize(numJSTarget, 
+      Math.floor(numJSTarget.shape[0] * resize_ratio), 
+      Math.floor(numJSTarget.shape[1] * resize_ratio))
+  }
+
+  console.log('the new shape0/shape1 ratio is')
+  console.log(resized_target.shape[0]/resized_target.shape[1])
+  return resized_target
+}
 
 function makeMosaic() {
 
-  const targetUpload = this.files[0];
+  let targetUpload = this.files[0];
 
   let target_img = new Image()
   target_img.src = URL.createObjectURL(targetUpload)
@@ -316,16 +352,20 @@ function makeMosaic() {
     
     let target_arr = nj.images.read(target_img)
 
-    let height_in_tiles = Math.floor(TILING_FACTOR * target_arr.shape[0] / COMPONENT_SIZE)
+    target_arr = resizeTarget(target_arr, targetUpload)
 
-    let width_in_tiles = Math.floor(TILING_FACTOR * target_arr.shape[1] / COMPONENT_SIZE)
+    let height_in_tiles = Math.floor(TILING_FACTOR * target_arr.shape[0] / UPLOADED_TILE_SIZE)
+
+    let width_in_tiles = Math.floor(TILING_FACTOR * target_arr.shape[1] / UPLOADED_TILE_SIZE)
 
     let total_tiles_to_draw = height_in_tiles * width_in_tiles
-    console.log('will need to draw ' + total_tiles_to_draw.toString() + ' tiles')
+    let total_pix = total_tiles_to_draw * UPLOADED_TILE_SIZE * UPLOADED_TILE_SIZE
+    console.log('But I have actually decided to draw ' + total_tiles_to_draw.toString() + ' tiles')
+    console.log('and therefore ' + total_pix.toString() + ' pixels')
 
     // alert('output should have tile height ' + height_in_tiles.toString() + ' and tile width ' + width_in_tiles.toString())
 
-    let stride_on_target = Math.round(COMPONENT_SIZE / TILING_FACTOR)
+    let stride_on_target = Math.round(UPLOADED_TILE_SIZE / TILING_FACTOR)
 
     // since updating NumJS arrays has to be done on individual pixels,
     // use stacking instead
@@ -459,10 +499,11 @@ const resolutionInput = document.getElementsByClassName('resolutionInput')[0];
 const tilingFactorInput = document.getElementsByClassName('tilingFactorInput')[0];
 
 function updateResolution() {
-  if (resolutionInput.value > 0) {
+  if (resolutionInput.value > 0 && resolutionInput.value < 10000) {
     COMPONENT_SIZE = resolutionInput.value;
   } else {
     resolutionInput.value = 40;
+    COMPONENT_SIZE = 40;
     updateResolutionText();
     alert('Tile resolution must be a positive number.');
   }
@@ -472,7 +513,8 @@ function updateTilingFactor() {
   if (tilingFactorInput.value > 0) {
     TILING_FACTOR = tilingFactorInput.value
   } else {
-    tilingFactorInput.value = 4
+    tilingFactorInput.value = 2;
+    TILING_FACTOR = 2;
     alert('Tiling factor must be a positive number.')
   }
 }
