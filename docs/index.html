@@ -24,6 +24,19 @@
     <h2><a class='homepageLink' href='https://chgagnon.github.io'>back to Charlie's site</a></h2>
     <!-- span included so that box is fit to text, and containing div allows
         for centering span on the page -->
+    <div class="centeringDiv">
+      <p class='comic'>Tile resolution: 
+        <input type="number" name="resolution" size='10' class='resolutionInput comic' min='5' max='100' step='5' value='40'> by <span id='resolutionNum'>40</span> 
+        <span class='smallText'>(pixels)</span>
+      </p>
+    </div>
+    <div class='centeringDiv'>
+      <p class='comic'>Tiling factor: 
+        <input type="number" name='tilingFactor' size='10' class='tilingFactorInput comic' min='1' max='10' step='1' value='4'> 
+        <span class='smallText'>(tiles in output mosaic per <br> tile-sized region in input image, along one dimension)</span>
+      </p>
+    </div>
+    <div class='centeringDiv comic smallText'>(Re-upload tile images to apply the settings above)</div>
     <div class='centeringDiv'>
       <span class='tileButton'>
         <button style='cursor: pointer;' type="button">
@@ -35,13 +48,8 @@
     <!-- input for target image (that will be made into a mosaic) -->
     <input type='file' accept='image/*' name='target' id='targetInput' style='display: none;'>
 
-<!-- Following element should not be in the code but is currently kept out of sentimental attachment -->
-    <!-- <br>
-    <button style="cursor: pointer;" onclick='cool()'>click here to upload an image to make into a mosaic</button> -->
     <br>
     <!-- for image insertion -->
-    
-
     <div id="tileCanvasHolder"></div>
 
 

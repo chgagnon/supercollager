@@ -1,9 +1,9 @@
 // query elements of the DOM only after they've loaded (avoids receiving undefined values)
 document.addEventListener('DOMContentLoaded', (event) => {
 
-const COMPONENT_SIZE = 40;
+let COMPONENT_SIZE = 40;
 
-const TILING_FACTOR = 5;
+let TILING_FACTOR = 5;
 
 let numFiles = null;
 
@@ -84,7 +84,6 @@ function cropTile(img) {
   }
 
   // console.log('Cropped to '+ cropped_tile.shape.toString());
-
   cropped_tile = nj.images.resize(cropped_tile, COMPONENT_SIZE, COMPONENT_SIZE);
 
   console.log("Final cropped shape is " + cropped_tile.shape.toString());
@@ -453,7 +452,41 @@ tileButton.addEventListener('click', function () {
   tileInput.click();
 });
 
+// change event fires when file is selected (enter is pressed)
 tileInput.addEventListener('change', uploadTiles);
 
+const resolutionInput = document.getElementsByClassName('resolutionInput')[0];
+const tilingFactorInput = document.getElementsByClassName('tilingFactorInput')[0];
+
+function updateResolution() {
+  if (resolutionInput.value > 0) {
+    COMPONENT_SIZE = resolutionInput.value;
+  } else {
+    resolutionInput.value = 40;
+    updateResolutionText();
+    alert('Tile resolution must be a positive number.');
+  }
+}
+
+function updateTilingFactor() {
+  if (tilingFactorInput.value > 0) {
+    TILING_FACTOR = tilingFactorInput.value
+  } else {
+    tilingFactorInput.value = 4
+    alert('Tiling factor must be a positive number.')
+  }
+}
+
+function updateResolutionText() {
+  let text = document.getElementById('resolutionNum')
+  text.textContent = resolutionInput.value
+}
+
+resolutionInput.addEventListener('change', updateResolution)
+
+tilingFactorInput.addEventListener('change', updateTilingFactor)
+
+resolutionInput.addEventListener('input', updateResolutionText)
 
 })
+

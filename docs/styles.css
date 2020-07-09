@@ -15,11 +15,28 @@ h2 {
 
 .homepageLink {
   color: black;
-
 }
 
 .homepageLink:hover {
-  color: darkBlue;
+  color: RoyalBlue;
+}
+
+.resolutionInput {
+  width: 2.5em;
+  font-size: larger;
+}
+
+.tilingFactorInput {
+  width: 2.5em;
+  font-size: larger;
+}
+
+.comic {
+  font-family: Comic Sans MS, -apple-system, BlinkMacSystemFont;
+}
+
+.smallText {
+  font-size: small;
 }
 
 h4 {
@@ -67,7 +84,7 @@ body {
 .tileButton button {
   text-align: center;
   border: double;
-  font-family: Comic Sans MS;
+  font-family: Comic Sans MS, -apple-system, BlinkMacSystemFont;
   font-size: large;
   margin-top: 15px;
   background-color: white;
