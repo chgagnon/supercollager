@@ -9,7 +9,10 @@ let TILING_FACTOR = 2;
 
 // 8.5 million pixels 
 // (a round number above 4900 tiles with tile resolution 40x40px, which is known to work)
-let MAX_PIX_TO_DRAW = 8500000;
+const MAX_PIX_TO_DRAW = 8500000;
+
+// this may not be useful but we shall see - 20k
+const MAX_TILES = 20000
 
 let numFiles = null;
 
@@ -274,6 +277,10 @@ function addLoadingBar() {
 }
 
 function displayMosaic(mosaic) {
+
+  console.log('adding waiting class')
+  document.body.classList.add('waiting')
+
   const knit_rows = (growing_mosaic, next_row) => {
         // console.log('growing shape is ' + growing_mosaic.shape.toString())
         // console.log('next row shape is ' + next_row.shape.toString())
@@ -307,6 +314,9 @@ function displayMosaic(mosaic) {
 
   showDownloadLink(mosaic_canvas);
 
+  console.log('removing waiting class')
+  document.body.classList.remove('waiting')
+
   encourageAnotherMosaic();
 }
 
@@ -314,24 +324,52 @@ function resizeTarget(numJSTarget, fileAPITarget) {
   console.log('The original shape0/shape1 ratio is ')
   console.log(numJSTarget.shape[0]/numJSTarget.shape[1]) 
 
+  let resized_target = numJSTarget
+
   console.log('The input target was ' + fileAPITarget.size.toString() + ' bytes')
-  let height_in_tiles = Math.floor(TILING_FACTOR * numJSTarget.shape[0] / UPLOADED_TILE_SIZE)
-  let width_in_tiles = Math.floor(TILING_FACTOR * numJSTarget.shape[1] / UPLOADED_TILE_SIZE)
+  let height_in_tiles = Math.floor(TILING_FACTOR * resized_target.shape[0] / UPLOADED_TILE_SIZE)
+  let width_in_tiles = Math.floor(TILING_FACTOR * resized_target.shape[1] / UPLOADED_TILE_SIZE)
   let total_tiles_to_draw = height_in_tiles * width_in_tiles
   console.log('Initial total tiles to draw is ' + total_tiles_to_draw.toString())
   let total_pix = total_tiles_to_draw * UPLOADED_TILE_SIZE * UPLOADED_TILE_SIZE
   console.log('Initial total pixels to draw is ' + total_pix.toString())
 
-  let max_tiles = MAX_PIX_TO_DRAW / (UPLOADED_TILE_SIZE * UPLOADED_TILE_SIZE)
+  // resizing based on a maximum number of pixels
 
-  let resize_ratio = 1;
-  let resized_target = numJSTarget
+  let num_tiles_set_by_max_pix = MAX_PIX_TO_DRAW / (UPLOADED_TILE_SIZE * UPLOADED_TILE_SIZE)
+
+  let resize_ratio_pix = 1;
   if (total_pix > MAX_PIX_TO_DRAW) {
 
-    resize_ratio = Math.sqrt(max_tiles / total_tiles_to_draw);
-    resized_target = nj.images.resize(numJSTarget, 
-      Math.floor(numJSTarget.shape[0] * resize_ratio), 
-      Math.floor(numJSTarget.shape[1] * resize_ratio))
+    resize_ratio_pix = Math.sqrt(num_tiles_set_by_max_pix / total_tiles_to_draw);
+
+    resized_target = nj.images.resize(resized_target, 
+      Math.floor(resized_target.shape[0] * resize_ratio_pix), 
+      Math.floor(resized_target.shape[1] * resize_ratio_pix))
+  }
+
+  // halfway check
+
+  let check_height_in_tiles = Math.floor(TILING_FACTOR * resized_target.shape[0] / UPLOADED_TILE_SIZE)
+  let check_width_in_tiles = Math.floor(TILING_FACTOR * resized_target.shape[1] / UPLOADED_TILE_SIZE)
+  let check_total_tiles_to_draw = check_height_in_tiles * check_width_in_tiles
+  let check_pix = check_total_tiles_to_draw * UPLOADED_TILE_SIZE * UPLOADED_TILE_SIZE
+  console.log('At this point I could draw ' + check_total_tiles_to_draw.toString() 
+    + ' tiles and ' + check_pix.toString() + ' pixels')
+
+  // resizing based on a maximum number of tiles
+
+  let resize_ratio_tiles = 1;
+  height_in_tiles = Math.floor(TILING_FACTOR * resized_target.shape[0] / UPLOADED_TILE_SIZE)
+  width_in_tiles = Math.floor(TILING_FACTOR * resized_target.shape[1] / UPLOADED_TILE_SIZE)
+  total_tiles_to_draw = height_in_tiles * width_in_tiles
+  
+  if (total_tiles_to_draw > MAX_TILES) {
+    resize_ratio_tiles = Math.sqrt(MAX_TILES / total_tiles_to_draw);
+
+    resized_target = nj.images.resize(resized_target,
+      Math.floor(resized_target.shape[0] * resize_ratio_tiles),
+      Math.floor(resized_target.shape[1] * resize_ratio_tiles))
   }
 
   console.log('the new shape0/shape1 ratio is')
