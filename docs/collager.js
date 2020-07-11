@@ -12,7 +12,7 @@ let TILING_FACTOR = 2;
 const MAX_PIX_TO_DRAW = 8500000;
 
 // this may not be useful but we shall see - 20k
-const MAX_TILES = 20000
+const MAX_TILES = 20000;
 
 let numFiles = null;
 
@@ -32,23 +32,17 @@ function writeTilesTitle() {
     let canvasHolder = document.getElementById('tileCanvasHolder')
     document.body.insertBefore(tilesTitle, canvasHolder)
   }
-  
 }
 
-// Controls tile thumbnail display size (but not actual image size in pixels)
+// Controls final mosaic thumbnail display size (but not actual image size in pixels)
 function setCanvasSizeToImg(canvas, img) {
 
   canvas.width = Math.floor(img.shape[1] / 2);
   canvas.height = Math.floor(img.shape[0] / 2);
-  // size canvas larger than image so that tiles are easy for user to see
-  // canvas.width = 120
-  // canvas.height = 120
-
 }
 
-
-// @param: img - Ndarray (from NumJS) for a mosaic tile
-// @return: 3-element array - an RGB color vector for the input image
+// @param img - Ndarray (from NumJS) for a mosaic tile
+// @return 3-element array - an RGB color vector for the input image
 function get_average_color(img) {
   let R = nj.mean(img.slice(null, null,[0,1]));
   // console.log('R channel average is ' + R.toString());
@@ -97,12 +91,10 @@ function cropTile(img) {
 
   console.log("Final cropped shape is " + cropped_tile.shape.toString());
 
-  return cropped_tile;
-               
+  return cropped_tile;            
 }
 
 function addUploadMosaicTargetButton() {
-  
 
   const targetInput = document.getElementById('targetInput');
   targetInput.addEventListener('change', makeMosaic);
@@ -120,8 +112,6 @@ function addUploadMosaicTargetButton() {
    */
   void checkTargetUploadButton.offsetWidth;
   checkTargetUploadButton.setAttribute('style', 'display: default;')  
-
-
 }
 
 function clearCanvasHolder() {
@@ -188,6 +178,7 @@ function uploadTiles() {
 
       let cropped_tile = cropTile(img);
 
+      // this size does not affect actual tile resolution
       cropped_canvas.width = cropped_canvas.height = 120;
 
       nj.images.save(cropped_tile, cropped_canvas);
@@ -199,18 +190,14 @@ function uploadTiles() {
       // checking whether this is the last image to load
       if (img_num == (numFiles - 1)) {
         // alert('thumbnails loaded')
-
         // after displaying tile thumbnails --> display button to upload mosaic target
-
         addUploadMosaicTargetButton();
       }
 
     };
-
-    console.log('processed image number: ' + img_num.toString());
+    console.log('Uploaded tile number: ' + img_num.toString() + ' of ' + numFiles.toString());
   }
-
-};
+}
 
 /* @param targetSegment - image array (in NumJS) segment of target image that
  * will be replaced with tile that has nearest average color
@@ -223,7 +210,6 @@ function getNearestTile(targetSegment) {
   let target_seg_color = get_average_color(targetSegment)
 
   // get distance between all 3-channel vectors in the tiles_dict
-
   let distances = new Object();
 
   let euclidean_distance = (accumulator, color_component, index) => accumulator + 
@@ -234,17 +220,19 @@ function getNearestTile(targetSegment) {
     distances[i] = tiles_dict[i]['tile_color'].reduce(euclidean_distance, 0)
   }
 
-  // return tile image that has smallest distance to input 3-channel vector
-    // determine which tile has minimum distance, then return it
-
+  /* return tile image that has smallest distance to input 3-channel vector
+   * determine which tile has minimum distance, then return it
+   */
   let get_argmin = (acc, curr_dist, index, array) => (curr_dist < array[acc]) ? index : acc;
-  // console.log('distances are ')
-  // console.log(Object.values(distances))
   let index_of_nearest_tile = Object.values(distances).reduce(get_argmin, 0)
-  // console.log('index of nearest tile is ' + index_of_nearest_tile.toString())
 
-  return tiles_dict[index_of_nearest_tile]['tile_img'];
-
+  let nearest_tile_obj = tiles_dict[index_of_nearest_tile];
+  // tiles may not exist if this call is interrupted by click to upload new tiles
+  if (!nearest_tile_obj) {
+    return nj.zeros([UPLOADED_TILE_SIZE, UPLOADED_TILE_SIZE,4])
+  } else {
+    return nearest_tile_obj['tile_img'];
+  }
 }
 
 function addLoadingBar() {
@@ -252,9 +240,9 @@ function addLoadingBar() {
   let centeringDiv = document.createElement('DIV')
   centeringDiv.classList.add('centeringDiv')
 
-  // Setting id so that bar can be removed later (rather than passing 
+  // Setting class so that bar can be removed later (rather than passing 
   // the HTML object through the necessary functions)
-  centeringDiv.setAttribute('id', 'bar')
+  centeringDiv.classList.add('barContainer')
 
   let container = document.createElement('DIV')
   centeringDiv.appendChild(container)
@@ -268,7 +256,6 @@ function addLoadingBar() {
     {'value': 0,
      'preset': 'line',
      'precision': '0.1'
-    
     })
 
   document.body.appendChild(centeringDiv)
@@ -276,53 +263,100 @@ function addLoadingBar() {
   return bar
 }
 
-function displayMosaic(mosaic) {
-
-  console.log('adding waiting class')
-  document.body.classList.add('waiting')
-
-  const knit_rows = (growing_mosaic, next_row) => {
-        // console.log('growing shape is ' + growing_mosaic.shape.toString())
-        // console.log('next row shape is ' + next_row.shape.toString())
-
-  // this concatenation is along axis 0 (height)
-  return nj.concatenate(growing_mosaic.transpose(2,1,0), next_row.transpose(2,1,0)).transpose(2,1,0);
-  }
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
-  final_mosaic = mosaic.reduce(knit_rows)
-
-  let mosaic_canvas_holder = document.createElement('DIV');
-  mosaic_canvas_holder.classList.add('mosaicCanvasHolder')
-
-  let mosaic_canvas = document.createElement('CANVAS');
-  
-  mosaic_canvas.classList.add('fadeIn', 'tileImage');
-
-  setCanvasSizeToImg(mosaic_canvas, final_mosaic);
-
-  nj.images.save(final_mosaic, mosaic_canvas)
-
-  mosaic_canvas_holder.appendChild(mosaic_canvas);
-
+function removeLoadingBar() {
   // get loading bar container to then remove it
-  let loadingBarContainer = document.getElementById('bar')
-  document.body.removeChild(loadingBarContainer)
-
-  // display final image
-  document.body.appendChild(mosaic_canvas_holder)
-
-  showDownloadLink(mosaic_canvas);
-
-  console.log('removing waiting class')
-  document.body.classList.remove('waiting')
-
-  encourageAnotherMosaic();
+  let loadingBarContainerListHead = document.getElementsByClassName('barContainer')[0];
+  
+  if (loadingBarContainerListHead) {
+    document.body.removeChild(loadingBarContainerListHead)
+  }
 }
 
+function removeAllLoadingBars() {
+  // get loading bar container to then remove it
+  let loadingBarContainerList = document.getElementsByClassName('barContainer');
+  // removing elements updates length field immediately -> need to save original length
+  let len = loadingBarContainerList.length;
+  
+  for (let i = 0; i < len; i++) {
+    console.log('removing bar ' + i.toString())
+    // list is re-indexed after each removal
+    document.body.removeChild(loadingBarContainerList[0])
+  }
+}
+
+function addLoadingMessage() {
+  let msg = document.createElement('SPAN')
+  msg.classList.add('comic')
+  msg.textContent = 'Displaying mosaic soon (please hold)...'
+
+  let msgDiv = document.createElement('DIV')
+  msgDiv.classList.add('centeringDiv')
+  msgDiv.classList.add('loadingMsg')
+  msgDiv.appendChild(msg)
+ 
+  document.body.appendChild(msgDiv)
+}
+
+function removeLoadingMessage() {
+  let msgListHead = document.getElementsByClassName('loadingMsg')[0];
+  if (msgListHead) {
+    document.body.removeChild(msgListHead)
+  }
+}
+
+function displayMosaic(mosaic) {
+
+  removeLoadingBar();
+  addLoadingMessage();
+  console.log('poo poo')
+
+  /* timeout used to trigger drawing of loading message (which is an important
+   * msg because the whole window freezes while knitting the mosaic)
+   */
+  setTimeout(function() {
+    const knit_rows = (growing_mosaic, next_row) => {
+    // console.log('growing shape is ' + growing_mosaic.shape.toString())
+    // console.log('next row shape is ' + next_row.shape.toString())
+
+    // this concatenation is along axis 0 (height)
+    return nj.concatenate(growing_mosaic.transpose(2,1,0), next_row.transpose(2,1,0)).transpose(2,1,0);
+    }
+
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
+    final_mosaic = mosaic.reduce(knit_rows)
+
+    let mosaic_canvas_holder = document.createElement('DIV');
+    mosaic_canvas_holder.classList.add('mosaicCanvasHolder')
+
+    let mosaic_canvas = document.createElement('CANVAS');
+    
+    mosaic_canvas.classList.add('fadeIn', 'tileImage');
+
+    setCanvasSizeToImg(mosaic_canvas, final_mosaic);
+
+    nj.images.save(final_mosaic, mosaic_canvas)
+
+    mosaic_canvas_holder.appendChild(mosaic_canvas);
+
+    removeLoadingMessage();
+
+    // display final mosaic image
+    document.body.appendChild(mosaic_canvas_holder)
+
+    showDownloadLink(mosaic_canvas);
+
+    encourageAnotherMosaic();
+  }, 0)
+} 
+
+/* Decrease resolution of target image so that output mosaic has a reasonable
+ * resolution and reasonable number of tiles (both below the max values set
+ * as global variables at the top of this file)
+ */
 function resizeTarget(numJSTarget, fileAPITarget) {
-  console.log('The original shape0/shape1 ratio is ')
-  console.log(numJSTarget.shape[0]/numJSTarget.shape[1]) 
+  console.log('The original shape[0] : shape[1] ratio is:')
+  console.log('1 : ' + numJSTarget.shape[0]/numJSTarget.shape[1].toString()) 
 
   let resized_target = numJSTarget
 
@@ -342,38 +376,32 @@ function resizeTarget(numJSTarget, fileAPITarget) {
   if (total_pix > MAX_PIX_TO_DRAW) {
 
     resize_ratio_pix = Math.sqrt(num_tiles_set_by_max_pix / total_tiles_to_draw);
-
     resized_target = nj.images.resize(resized_target, 
       Math.floor(resized_target.shape[0] * resize_ratio_pix), 
-      Math.floor(resized_target.shape[1] * resize_ratio_pix))
+      Math.floor(resized_target.shape[1] * resize_ratio_pix));
   }
 
-  // halfway check
-
-  let check_height_in_tiles = Math.floor(TILING_FACTOR * resized_target.shape[0] / UPLOADED_TILE_SIZE)
-  let check_width_in_tiles = Math.floor(TILING_FACTOR * resized_target.shape[1] / UPLOADED_TILE_SIZE)
-  let check_total_tiles_to_draw = check_height_in_tiles * check_width_in_tiles
-  let check_pix = check_total_tiles_to_draw * UPLOADED_TILE_SIZE * UPLOADED_TILE_SIZE
-  console.log('At this point I could draw ' + check_total_tiles_to_draw.toString() 
-    + ' tiles and ' + check_pix.toString() + ' pixels')
-
   // resizing based on a maximum number of tiles
-
   let resize_ratio_tiles = 1;
-  height_in_tiles = Math.floor(TILING_FACTOR * resized_target.shape[0] / UPLOADED_TILE_SIZE)
-  width_in_tiles = Math.floor(TILING_FACTOR * resized_target.shape[1] / UPLOADED_TILE_SIZE)
-  total_tiles_to_draw = height_in_tiles * width_in_tiles
+  height_in_tiles = Math.floor(TILING_FACTOR * resized_target.shape[0] / UPLOADED_TILE_SIZE);
+  width_in_tiles = Math.floor(TILING_FACTOR * resized_target.shape[1] / UPLOADED_TILE_SIZE);
+  total_tiles_to_draw = height_in_tiles * width_in_tiles;
+  total_pix = total_tiles_to_draw * UPLOADED_TILE_SIZE * UPLOADED_TILE_SIZE;
+  
+  // halfway check
+  console.log('At this point I could draw ' + total_tiles_to_draw.toString() 
+    + ' tiles and ' + total_pix.toString() + ' pixels');
   
   if (total_tiles_to_draw > MAX_TILES) {
     resize_ratio_tiles = Math.sqrt(MAX_TILES / total_tiles_to_draw);
 
     resized_target = nj.images.resize(resized_target,
       Math.floor(resized_target.shape[0] * resize_ratio_tiles),
-      Math.floor(resized_target.shape[1] * resize_ratio_tiles))
+      Math.floor(resized_target.shape[1] * resize_ratio_tiles));
   }
 
-  console.log('the new shape0/shape1 ratio is')
-  console.log(resized_target.shape[0]/resized_target.shape[1])
+  console.log('The new shape[0] : shape[1] ratio is:')
+  console.log('1 : ' + resized_target.shape[0]/resized_target.shape[1].toString())
   return resized_target
 }
 
@@ -405,8 +433,9 @@ function makeMosaic() {
 
     let stride_on_target = Math.round(UPLOADED_TILE_SIZE / TILING_FACTOR)
 
-    // since updating NumJS arrays has to be done on individual pixels,
-    // use stacking instead
+    /* since updating NumJS arrays has to be done on individual pixels,
+     * use stacking instead (construct each row on-the-go, instead of up front)
+     */
 
     let mosaic = new Array();
 
@@ -455,13 +484,10 @@ function makeMosaic() {
         } else {
           displayMosaic(mosaic)
         }
-
       }
     })();
 
   }
-
-  
 }
 
 function showDownloadLink(canvas) {
@@ -492,10 +518,9 @@ function showDownloadLink(canvas) {
   mosaicDownloadButton.appendChild(downloadSpan)
 
   document.body.appendChild(mosaicDownloadButton)
-
 }
 
-// changes text in button to upload mosaic target image
+// changes text in target-upload button, and makes the button blink
 function encourageAnotherMosaic() {
   let button = document.getElementById('targetButtonButton')
   button.textContent = 'click here to upload another image to make into a mosaic'
@@ -520,17 +545,17 @@ function encourageAnotherMosaic() {
       }, blink_duration)
     }, blink_duration)
   }, blink_duration)
-  
 }
 
 const tileButton = document.getElementsByClassName("tileButton")[0];
 const tileInput = document.getElementById('tileInput');
 
 tileButton.addEventListener('click', function () {
+  removeAllLoadingBars();
   tileInput.click();
 });
 
-// change event fires when file is selected (enter is pressed)
+// change event fires when file is selected (enter is pressed / Open is clicked)
 tileInput.addEventListener('change', uploadTiles);
 
 const resolutionInput = document.getElementsByClassName('resolutionInput')[0];
@@ -543,7 +568,7 @@ function updateResolution() {
     resolutionInput.value = 40;
     COMPONENT_SIZE = 40;
     updateResolutionText();
-    alert('Tile resolution must be a positive number.');
+    alert('Tile resolution must be a positive number less than 10,000.');
   }
 }
 
@@ -566,7 +591,6 @@ resolutionInput.addEventListener('change', updateResolution)
 
 tilingFactorInput.addEventListener('change', updateTilingFactor)
 
+// input event fires whenever the value in the box changes (updates "live")
 resolutionInput.addEventListener('input', updateResolutionText)
-
 })
-
