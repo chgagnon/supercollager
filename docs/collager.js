@@ -309,7 +309,6 @@ function displayMosaic(mosaic) {
 
   removeLoadingBar();
   addLoadingMessage();
-  console.log('poo poo')
 
   /* timeout used to trigger drawing of loading message (which is an important
    * msg because the whole window freezes while knitting the mosaic)
