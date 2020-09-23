@@ -3,7 +3,7 @@ Photomosaic generator
 
 ## Web Version - [available here](https://chgagnon.github.io/supercollager/)
 
-The code for the web version is within docs/, so that the web version can be
+The code for the web version is within ```docs/```, so that the web version can be
 hosted on GitHub Pages.
 
 The web version functions in the same way as the Python version, but has
